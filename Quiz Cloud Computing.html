@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIGA College of Management and Computer Science</title>
+<style>
+    * { box-sizing: border-box; }
+
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 30px 15px;
+        background: #f4f6f9;
+        color: #2c3e50;
+    }
+
+    .quiz-container {
+        max-width: 800px;
+        margin: auto;
+        background: #fff;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 0 12px rgba(0,0,0,.1);
+    }
+
+    h2 { text-align: center; color: #2c3e50; }
+    .question {
+        margin-bottom: 18px;
+        padding: 15px;
+        border-bottom: 1px solid #ddd;
+        border-radius: 6px;
+    }
+    .question p { line-height: 1.5; margin-top: 0; }
+    .options label {
+        display: block;
+        margin: 9px 0;
+        padding: 9px 10px;
+        border: 1px solid #e1e5ea;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    .options label:hover { background: #f2f8fc; }
+    .options input { margin-right: 9px; }
+
+    .btn {
+        background: #3498db;
+        color: white;
+        padding: 11px 20px;
+        border: 0;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 8px 8px 0 0;
+    }
+    .btn:hover { background: #2980b9; }
+    .btn:disabled { background: #95a5a6; cursor: not-allowed; }
+
+    #result { margin-top: 22px; }
+    .score-summary {
+        padding: 16px;
+        background: #eef6fc;
+        border-radius: 7px;
+        margin-bottom: 18px;
+        text-align: center;
+    }
+    .review-box {
+        margin-top: 15px;
+        padding: 15px;
+        border-radius: 6px;
+        line-height: 1.55;
+    }
+    .correct {
+        background-color: #d4edda;
+        border-left: 5px solid #28a745;
+    }
+    .incorrect {
+        background-color: #f8d7da;
+        border-left: 5px solid #dc3545;
+    }
+    .explanation {
+        margin-top: 10px;
+        padding: 10px;
+        background: white;
+        border-radius: 5px;
+    }
+    @media (max-width: 600px) {
+        body { padding: 15px 8px; }
+        .quiz-container { padding: 16px; }
+    }
+</style>
+</head>
+<body>
+<div class="quiz-container">
+    <h2>SIGA College of Management and Computer Science</h2>
+    <h3 align="center">Cloud Computing Quiz (III B.Sc. Computer Science)</h3>
+    <div id="quiz"></div>
+
+    <button class="btn" id="submitBtn" type="button">Submit Quiz</button>
+    <button class="btn" id="restartBtn" type="button" hidden>Restart Quiz</button>
+
+    <div id="result" aria-live="polite"></div>
+</div>
+
+<script>
+const originalQuizData = [
+    {
+        question: "Which cloud model provides virtual machines and storage?",
+        options: ["IaaS", "PaaS", "SaaS"],
+        answer: "IaaS",
+        explanation: "Infrastructure as a Service (IaaS) provides virtual machines, storage, and networking resources over the internet. Customers manage the operating system and applications."
+    },
+    {
+        question: "Which model is best for rapid application development?",
+        options: ["IaaS", "PaaS", "SaaS"],
+        answer: "PaaS",
+        explanation: "Platform as a Service (PaaS) provides development tools, frameworks, and runtime environments, allowing developers to build applications without managing infrastructure."
+    },
+    {
+        question: "Which model delivers software like Gmail or Office 365?",
+        options: ["IaaS", "PaaS", "SaaS"],
+        answer: "SaaS",
+        explanation: "Software as a Service (SaaS) delivers fully functional applications through a web browser. Users do not need to install or maintain the software."
+    },
+    {
+        question: "In which model does the customer manage OS and applications?",
+        options: ["IaaS", "PaaS", "SaaS"],
+        answer: "IaaS",
+        explanation: "With IaaS, the provider manages hardware and virtualization, while customers manage the operating system, applications, and data."
+    },
+    {
+        question: "Which cloud deployment model is available for shared use by several organizations?",
+        options: ["Hybrid Cloud", "Public Cloud", "Community Cloud"],
+        answer: "Community Cloud",
+        explanation: "A Community Cloud is shared among organizations that have common requirements such as security, compliance, or operational needs."
+    },
+    {
+        question: "Which cloud deployment model combines multiple clouds that remain unique but are bound together for portability?",
+        options: ["Elastic Compute Cloud", "Private Cloud", "Hybrid Cloud"],
+        answer: "Hybrid Cloud",
+        explanation: "A Hybrid Cloud combines private and public cloud environments, allowing applications and data to move between them."
+    },
+    {
+        question: "Which cloud deployment model is available for public use or a large industry group?",
+        options: ["Private", "Public", "Community"],
+        answer: "Public",
+        explanation: "Public Cloud services are owned and operated by cloud providers and made available to the general public over the internet."
+    },
+    {
+        question: "GPU stands for:",
+        options: ["Graphics Processing Unit", "Game Processing Unit", "Grievances Processing Unit"],
+        answer: "Graphics Processing Unit",
+        explanation: "A Graphics Processing Unit (GPU) is designed for parallel processing and is commonly used in graphics rendering, AI, machine learning, and scientific computing."
+    },
+    {
+        question: "Which cloud deployment model is dedicated to a single organization?",
+        options: ["Public Cloud", "Community Cloud", "Private Cloud"],
+        answer: "Private Cloud",
+        explanation: "A Private Cloud is exclusively used by a single organization. It offers greater control, security, and customization compared to public cloud environments."
+    },
+    {
+        question: "Which cloud service model provides ready-to-use software applications to end users?",
+        options: ["SaaS", "PaaS", "IaaS"],
+        answer: "SaaS",
+        explanation: "Software as a Service (SaaS) delivers complete software applications over the internet. Examples include Microsoft 365, Google Workspace, and Salesforce. Users simply access the application without managing infrastructure or platforms."
+    },
+    {
+        question: "What is the primary purpose of Multi-Factor Authentication (MFA) in cloud security?",
+        options: ["Increase storage capacity", "Provide additional layers of user verification", "Improve network speed"],
+        answer: "Provide additional layers of user verification",
+        explanation: "Multi-Factor Authentication (MFA) enhances security by requiring users to provide two or more forms of verification, such as a password and a one-time code. This reduces the risk of unauthorized access even if a password is compromised."
+    },
+    {
+        question: "What is a key advantage of cloud-based applications compared to traditional desktop applications?",
+        options: ["Accessible from anywhere with an internet connection", "Require more local storage", "Can only be used on one computer"],
+        answer: "Accessible from anywhere with an internet connection",
+        explanation: "Cloud applications are hosted online and can be accessed from multiple devices and locations, providing flexibility, mobility, and easier collaboration."
+    },
+    {
+        question: "Which cloud storage service is provided by Microsoft?",
+        options: ["OneDrive", "Dropbox", "Google Drive"],
+        answer: "OneDrive",
+        explanation: "Microsoft OneDrive is a cloud storage service that allows users to store, synchronize, and share files securely across devices."
+    },
+    {
+        question: "What is the primary benefit of cloud storage?",
+        options: ["Access files from anywhere with an internet connection", "Increase computer processor speed", "Replace operating systems"],
+        answer: "Access files from anywhere with an internet connection",
+        explanation: "Cloud storage enables users to store data online and access it from multiple devices and locations, improving flexibility and collaboration."
+    },
+    {
+        question: "Which cloud storage feature helps recover files that were accidentally deleted or modified?",
+        options: ["Versioning and Backup", "Load Balancing", "Virtualization"],
+        answer: "Versioning and Backup",
+        explanation: "Versioning and backup features maintain previous copies of files, making it possible to restore data after accidental deletion, corruption, or unwanted changes."
+    }
+];
+
+// Fisher-Yates shuffle: creates a shuffled copy without changing the original data.
+function shuffledCopy(items) {
+    const copy = [...items];
+    for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+}
+
+let quizData = [];
+
+function loadQuiz() {
+    quizData = shuffledCopy(originalQuizData);
+    const quizContainer = document.getElementById("quiz");
+    quizContainer.innerHTML = "";
+    document.getElementById("result").innerHTML = "";
+
+    quizData.forEach((q, index) => {
+        const questionDiv = document.createElement("section");
+        questionDiv.className = "question";
+
+        const questionText = document.createElement("p");
+        const questionStrong = document.createElement("strong");
+        questionStrong.textContent = `${index + 1}. ${q.question}`;
+        questionText.appendChild(questionStrong);
+        questionDiv.appendChild(questionText);
+
+        const optionsDiv = document.createElement("div");
+        optionsDiv.className = "options";
+
+        shuffledCopy(q.options).forEach(option => {
+            const label = document.createElement("label");
+            const radio = document.createElement("input");
+            radio.type = "radio";
+            radio.name = `q${index}`;
+            radio.value = option;
+
+            label.appendChild(radio);
+            label.appendChild(document.createTextNode(option));
+            optionsDiv.appendChild(label);
+        });
+
+        questionDiv.appendChild(optionsDiv);
+        quizContainer.appendChild(questionDiv);
+    });
+
+    document.getElementById("submitBtn").disabled = false;
+    document.getElementById("submitBtn").hidden = false;
+    document.getElementById("submitBtn").textContent = "Submit Quiz";
+    document.getElementById("restartBtn").hidden = true;
+}
+
+function submitQuiz() {
+    // Check that every question has an answer.
+    for (let index = 0; index < quizData.length; index++) {
+        const selected = document.querySelector(`input[name="q${index}"]:checked`);
+        if (!selected) {
+            alert(`Please answer Question ${index + 1} before submitting.`);
+            return;
+        }
+    }
+
+    let score = 0;
+    const result = document.getElementById("result");
+    result.innerHTML = "";
+
+    quizData.forEach((q, index) => {
+        const selected = document.querySelector(`input[name="q${index}"]:checked`);
+        const isCorrect = selected.value === q.answer;
+        if (isCorrect) score++;
+
+        const reviewBox = document.createElement("div");
+        reviewBox.className = `review-box ${isCorrect ? "correct" : "incorrect"}`;
+
+        const heading = document.createElement("strong");
+        heading.textContent = `Question ${index + 1}`;
+        reviewBox.appendChild(heading);
+        reviewBox.appendChild(document.createElement("br"));
+        reviewBox.appendChild(document.createTextNode(q.question));
+        reviewBox.appendChild(document.createElement("br"));
+        reviewBox.appendChild(document.createElement("br"));
+
+        const yourAnswer = document.createElement("span");
+        yourAnswer.innerHTML = "<strong>Your Answer:</strong> ";
+        yourAnswer.appendChild(document.createTextNode(selected.value));
+        reviewBox.appendChild(yourAnswer);
+        reviewBox.appendChild(document.createElement("br"));
+
+        const correctAnswer = document.createElement("span");
+        correctAnswer.innerHTML = "<strong>Correct Answer:</strong> ";
+        correctAnswer.appendChild(document.createTextNode(q.answer));
+        reviewBox.appendChild(correctAnswer);
+        reviewBox.appendChild(document.createElement("br"));
+        reviewBox.appendChild(document.createElement("br"));
+
+        const status = document.createElement("strong");
+        status.textContent = isCorrect ? "✓ Correct" : "✗ Incorrect";
+        reviewBox.appendChild(status);
+
+        const explanation = document.createElement("div");
+        explanation.className = "explanation";
+        const explanationTitle = document.createElement("strong");
+        explanationTitle.textContent = "Explanation:";
+        explanation.appendChild(explanationTitle);
+        explanation.appendChild(document.createElement("br"));
+        explanation.appendChild(document.createTextNode(q.explanation));
+        reviewBox.appendChild(explanation);
+
+        result.appendChild(reviewBox);
+    });
+
+    const percentage = Math.round((score / quizData.length) * 100);
+    const summary = document.createElement("div");
+    summary.className = "score-summary";
+    const scoreHeading = document.createElement("h3");
+    scoreHeading.textContent = `Your Score: ${score} / ${quizData.length}`;
+    const percentageText = document.createElement("p");
+    percentageText.textContent = `Percentage: ${percentage}%`;
+    summary.appendChild(scoreHeading);
+    summary.appendChild(percentageText);
+    result.insertBefore(summary, result.firstChild);
+
+    // Lock all answers after submission.
+    document.querySelectorAll("#quiz input[type='radio']").forEach(input => {
+        input.disabled = true;
+    });
+
+    document.getElementById("submitBtn").disabled = true;
+    document.getElementById("submitBtn").textContent = "Quiz Submitted";
+    document.getElementById("restartBtn").hidden = false;
+}
+
+document.getElementById("submitBtn").addEventListener("click", submitQuiz);
+document.getElementById("restartBtn").addEventListener("click", loadQuiz);
+
+loadQuiz();
+</script>
+</body>
+</html>
